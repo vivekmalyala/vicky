@@ -13,7 +13,6 @@
             background-color: #fff1f2;
             overflow: hidden;
             touch-action: manipulation;
-            transition: background-color 0.5s ease;
         }
 
         .bounce-in { animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) both; }
@@ -34,12 +33,12 @@
             position: fixed;
             inset: 0;
             pointer-events: none;
-            z-index: 1000; /* Foreground */
+            z-index: 1000;
         }
 
         .heart {
             position: absolute;
-            font-size: 2rem;
+            font-size: 2.5rem;
             animation: floatUp 4s linear forwards;
             z-index: 1001;
         }
@@ -55,10 +54,9 @@
             align-items: center;
             gap: 40px;
             height: 140px;
-            transition: all 0.5s ease;
         }
 
-        .bubu, .dudu { font-size: 5.5rem; transition: all 1s ease-in-out; }
+        .bubu, .dudu { font-size: 5.5rem; transition: all 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .hugging .bubu { transform: translateX(35px); }
         .hugging .dudu { transform: translateX(-35px); }
 
@@ -85,7 +83,7 @@
 
     <div id="hearts-container"></div>
 
-    <!-- Start Overlay for Music Activation -->
+    <!-- Start Overlay -->
     <div id="start-overlay">
         <div class="text-7xl mb-6">💌</div>
         <h1 class="text-2xl font-black text-rose-500 mb-8 px-6">Message from your Loved One</h1>
@@ -94,7 +92,7 @@
         </button>
     </div>
 
-    <!-- Main Card -->
+    <!-- Main Content Card -->
     <div id="main-card" class="bg-white rounded-[2.5rem] shadow-2xl p-8 max-w-sm w-full text-center border-4 border-rose-200 relative z-10 bounce-in">
         
         <div id="graphic-container" class="mb-6 flex justify-center h-32 items-center">
@@ -109,10 +107,10 @@
         </h1>
 
         <div id="buttons-container" class="flex flex-col gap-4 relative min-h-[180px] justify-center">
-            <button id="yes-btn" class="px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-full shadow-lg transition-all text-lg z-20">
+            <button id="btn-left" class="px-6 py-4 bg-red-500 text-white font-bold rounded-full shadow-lg transition-all text-lg z-20">
                 Yes (Always)
             </button>
-            <button id="no-btn" class="px-6 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full shadow-sm text-lg z-50 transition-all">
+            <button id="btn-right" class="px-6 py-4 bg-green-500 text-white font-bold rounded-full shadow-sm text-lg z-50 transition-all">
                 No (Always accepts everything)
             </button>
         </div>
@@ -126,15 +124,15 @@
     </audio>
 
     <script>
-        const yesBtn = document.getElementById('yes-btn');
-        const noBtn = document.getElementById('no-btn');
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
         const questionText = document.getElementById('question-text');
         const bearWrap = document.getElementById('bear-wrap');
         const bgMusic = document.getElementById('bg-music');
         const successMusic = document.getElementById('success-music');
         const mainCard = document.getElementById('main-card');
 
-        let stage = 0; // 0: First question, 1: Main "Like" question
+        let stage = 0; 
         let noCount = 0;
         let evasionCount = 0;
 
@@ -156,50 +154,49 @@
             if ("vibrate" in navigator) navigator.vibrate(200);
         }
 
-        // Logic for Question 1
-        yesBtn.onclick = () => {
-            if (stage === 0) {
-                // Clicking Yes (Always) -> Switch to "Do you like Vicky?"
-                switchToMainQuestion();
-            } else {
-                handleFinalYes();
-            }
-        };
+        // Setup Initial Click Listeners
+        btnLeft.onclick = () => handleFirstQuestionChoice('left');
+        btnRight.onclick = () => handleFirstQuestionChoice('right');
 
-        noBtn.onclick = () => {
-            if (stage === 0) {
-                // Clicking No (Always accepts) -> Switch to "So you don't like Vicky?"
+        function handleFirstQuestionChoice(choice) {
+            if (choice === 'left') {
+                // Yes (Always) -> Switch to "So you don't like Vicky?"
                 questionText.innerText = "So you don't like Vicky? 🤨";
-                yesBtn.innerText = "No, I like him!";
-                noBtn.innerText = "Yes, I don't";
-                stage = 1;
-                yesBtn.onclick = handleFinalYes;
-                noBtn.onclick = handleFinalYes;
+                btnLeft.innerText = "No, I like him!";
+                btnRight.innerText = "Yes, I don't";
+                
+                // Styling updates
+                btnLeft.className = "px-6 py-4 bg-green-500 text-white font-bold rounded-full shadow-lg transition-all text-lg z-20";
+                btnRight.className = "px-6 py-4 bg-red-500 text-white font-bold rounded-full shadow-sm text-lg z-50 transition-all";
+                
+                // Reversed logic: Clicking the new "No, I like him" (Left) triggers success
+                btnLeft.onclick = handleFinalYes;
+                // Clicking the new "Yes, I don't" (Right) triggers the No loop
+                btnRight.onclick = handleNoSequence;
             } else {
-                handleNoSequence();
+                // No (Always accepts) -> Switch to "Do you like Vicky?"
+                switchToMainQuestion();
             }
-        };
+        }
 
         function switchToMainQuestion() {
-            stage = 1;
             questionText.innerText = "Do you like Vicky? ❤️";
-            yesBtn.innerText = "Yes";
-            noBtn.innerText = "\"No\"";
+            btnLeft.innerText = "Yes";
+            btnRight.innerText = "\"No\"";
             
-            // Re-style buttons for the main question
-            yesBtn.className = "px-10 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full shadow-lg transition-all text-xl z-20";
-            noBtn.className = "px-10 py-4 bg-gray-200 text-gray-500 font-bold rounded-full shadow-sm text-lg z-50 transition-all";
+            btnLeft.className = "px-10 py-4 bg-green-500 text-white font-bold rounded-full shadow-lg transition-all text-xl z-20";
+            btnRight.className = "px-10 py-4 bg-gray-200 text-gray-500 font-bold rounded-full shadow-sm text-lg z-50 transition-all";
             
-            yesBtn.onclick = handleFinalYes;
-            noBtn.onclick = handleNoSequence;
+            btnLeft.onclick = handleFinalYes;
+            btnRight.onclick = handleNoSequence;
         }
 
         function handleNoSequence() {
             triggerVibrate();
             if (noCount < noMessages.length - 1) {
-                noBtn.innerText = noMessages[noCount];
+                btnRight.innerText = noMessages[noCount];
                 const scale = 1 + (noCount * 0.12);
-                yesBtn.style.transform = `scale(${scale})`;
+                btnLeft.style.transform = `scale(${scale})`;
                 noCount++;
             } else {
                 startEvasion();
@@ -207,24 +204,25 @@
         }
 
         function startEvasion() {
-            noBtn.classList.add('evading');
-            noBtn.onmouseover = doEvade;
-            noBtn.ontouchstart = (e) => { e.preventDefault(); doEvade(); };
+            btnRight.innerText = "Final \"No\" (Catch me!) 🏃‍♂️";
+            btnRight.classList.add('evading');
+            btnRight.onmouseover = doEvade;
+            btnRight.ontouchstart = (e) => { e.preventDefault(); doEvade(); };
         }
 
         function doEvade() {
             if (evasionCount < 10) {
                 const x = Math.random() * (window.innerWidth - 140) + 70;
                 const y = Math.random() * (window.innerHeight - 100) + 50;
-                noBtn.style.left = x + 'px';
-                noBtn.style.top = y + 'px';
+                btnRight.style.left = x + 'px';
+                btnRight.style.top = y + 'px';
                 evasionCount++;
             } else {
-                noBtn.classList.remove('evading');
-                noBtn.style.position = 'static';
-                noBtn.innerText = "Yes (Okay Fine!)";
-                noBtn.className = yesBtn.className;
-                noBtn.onclick = handleFinalYes; // Fixed: Works like Yes
+                btnRight.classList.remove('evading');
+                btnRight.style.position = 'static';
+                btnRight.innerText = "Yes (Okay Fine!)";
+                btnRight.className = btnLeft.className;
+                btnRight.onclick = handleFinalYes;
             }
         }
 
@@ -237,7 +235,6 @@
             
             bearWrap.classList.add('hugging');
             
-            // Foreground explosion
             for (let i = 0; i < 70; i++) {
                 setTimeout(createHeart, i * 100);
             }
@@ -248,7 +245,7 @@
             h.className = 'heart';
             h.innerText = ['❤️', '💖', '💕', '🥰', '✨'][Math.floor(Math.random() * 5)];
             h.style.left = Math.random() * 90 + 'vw';
-            h.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            h.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
             document.getElementById('hearts-container').appendChild(h);
             setTimeout(() => h.remove(), 4000);
         }
