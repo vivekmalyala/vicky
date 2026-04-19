@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Will you be mine? ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --primary-pink: #ff85a2;
+            --secondary-pink: #fbb6ce;
+            --bg-gradient: linear-gradient(180deg, #fff5f7 0%, #ffd1dc 100%);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .cursive { font-family: 'Pacifico', cursive; }
+
+        /* Full Screen Overlay for Effects */
+        #effects-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Bear Animation */
+        .bear-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 60px;
+            height: 200px;
+            position: relative;
+            margin-bottom: 2rem;
+            transition: all 0.5s ease;
+        }
+
+        .bubu, .dudu {
+            width: 130px;
+            height: 130px;
+            transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .hugging .bubu { transform: translateX(50px); }
+        .hugging .dudu { transform: translateX(-50px); }
+
+        /* Buttons */
+        .btn {
+            padding: 1.25rem 2.5rem;
+            border-radius: 9999px;
+            font-weight: 900;
+            font-size: 1.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            min-width: 160px;
+        }
+
+        .btn-yes { background-color: #4ade80; color: white; }
+        .btn-no { background-color: #fb7185; color: white; }
+
+        .evading { position: fixed !important; z-index: 100; }
+
+        /* Audio Control Overlay */
+        #start-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #final-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start Interaction Overlay -->
+    <div id="start-overlay">
+        <div class="text-6xl mb-6">💌</div>
+        <h2 class="text-2xl font-bold text-rose-500 mb-8 px-6 text-center">Open your message from Vicky?</h2>
+        <button onclick="startExperience()" class="px-10 py-4 bg-rose-500 text-white rounded-full font-black text-xl shadow-xl animate-bounce">
+            OPEN ❤️
+        </button>
+    </div>
+
+    <div id="effects-layer"></div>
+
+    <div id="game-screen" class="flex flex-col items-center text-center p-6 w-full max-w-lg z-10">
+        <div class="bear-container" id="bear-box">
+            <!-- Bubu (White) -->
+            <div class="bubu">
+                <svg viewBox="0 0 100 100"><circle cx="50" cy="55" r="35" fill="white" stroke="#333" stroke-width="2"/><circle cx="25" cy="30" r="12" fill="#333"/><circle cx="75" cy="30" r="12" fill="#333"/><ellipse cx="40" cy="50" rx="6" ry="8" fill="#333"/><ellipse cx="60" cy="50" rx="6" ry="8" fill="#333"/><circle cx="40" cy="48" r="2" fill="white"/><circle cx="60" cy="48" r="2" fill="white"/><path d="M45 65 Q50 70 55 65" fill="none" stroke="#333" stroke-width="2"/><circle cx="30" cy="58" r="4" fill="#ffccd5" opacity="0.6"/><circle cx="70" cy="58" r="4" fill="#ffccd5" opacity="0.6"/></svg>
+            </div>
+            <!-- Dudu (Brown) -->
+            <div class="dudu">
+                <svg viewBox="0 0 100 100"><circle cx="50" cy="55" r="35" fill="#a0522d" stroke="#333" stroke-width="2"/><circle cx="25" cy="30" r="12" fill="#a0522d" stroke="#333" stroke-width="2"/><circle cx="75" cy="30" r="12" fill="#a0522d" stroke="#333" stroke-width="2"/><circle cx="40" cy="50" r="5" fill="#333"/><circle cx="60" cy="50" r="5" fill="#333"/><path d="M45 65 Q50 70 55 65" fill="none" stroke="#333" stroke-width="2"/></svg>
+            </div>
+        </div>
+
+        <h1 id="question" class="text-4xl md:text-5xl font-black text-rose-600 mb-12 px-4 leading-tight">
+            Do you always say no to Vicky?
+        </h1>
+
+        <div id="btn-group" class="flex flex-col md:flex-row gap-6 items-center w-full justify-center">
+            <button id="yes-btn" class="btn btn-yes">Yes</button>
+            <button id="no-btn" class="btn btn-no">No</button>
+        </div>
+    </div>
+
+    <div id="final-screen" class="p-6">
+        <h1 class="text-5xl md:text-6xl font-black text-rose-500 cursive mb-6">Knew you would say yes!</h1>
+        <div id="success-bear-holder" class="mb-10 scale-125"></div>
+        <p class="text-2xl font-bold text-rose-400">You just made me the happiest person! 💕</p>
+    </div>
+
+    <!-- Audio Elements -->
+    <!-- Kawaii background music (Lofi/Cute) -->
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" type="audio/mpeg">
+    </audio>
+    <!-- Baby - Justin Bieber (Chorus focused) -->
+    <audio id="success-music">
+        <source src="https://www.myinstants.com/media/sounds/justin-bieber-baby-chorus.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const questionEl = document.getElementById('question');
+        const yesBtn = document.getElementById('yes-btn');
+        const noBtn = document.getElementById('no-btn');
+        const gameScreen = document.getElementById('game-screen');
+        const finalScreen = document.getElementById('final-screen');
+        const bearBox = document.getElementById('bear-box');
+        const effectsLayer = document.getElementById('effects-layer');
+        const bgMusic = document.getElementById('bg-music');
+        const successMusic = document.getElementById('success-music');
+
+        let stage = 0; 
+        let evasionCount = 0;
+        let noStage = 0;
+
+        const noMessages = [
+            "Wait, what? 🥺", "Are you sure? 🤨", "Think again! 🧐", 
+            "Vicky is sad now 🥀", "Still no? 😤", "I'm gonna cry... 🌧️",
+            "Last chance!", "Final No (Catch me!) 🏃‍♂️"
+        ];
+
+        function startExperience() {
+            document.getElementById('start-overlay').style.display = 'none';
+            bgMusic.volume = 0.4;
+            bgMusic.play().catch(e => console.log("Audio blocked"));
+        }
+
+        yesBtn.onclick = () => {
+            if (stage === 0) {
+                questionEl.innerText = "So you don't like Vicky? 🤨";
+                stage = 1;
+            } else {
+                handleSuccess();
+            }
+        };
+
+        noBtn.onclick = () => {
+            if (stage === 0) {
+                switchToMainQuestion();
+            } else {
+                handleNoLogic();
+            }
+        };
+
+        function switchToMainQuestion() {
+            stage = 1;
+            questionEl.innerText = "Do you like Vicky? ❤️";
+            noBtn.innerText = "No";
+            yesBtn.onclick = handleSuccess;
+        }
+
+        function handleNoLogic() {
+            if (noStage < noMessages.length - 1) {
+                noBtn.innerText = noMessages[noStage];
+                const scale = 1 + (noStage * 0.1);
+                yesBtn.style.transform = `scale(${scale})`;
+                noStage++;
+            } else {
+                startEvasion();
+            }
+        }
+
+        function startEvasion() {
+            noBtn.innerText = "Final No (Catch me!) 🏃‍♂️";
+            noBtn.classList.add('evading');
+            noBtn.addEventListener('mouseover', evade);
+            noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); evade(); }, {passive: false});
+        }
+
+        function evade() {
+            if (evasionCount < 10) {
+                const x = Math.random() * (window.innerWidth - 120) + 60;
+                const y = Math.random() * (window.innerHeight - 100) + 50;
+                noBtn.style.left = `${x}px`;
+                noBtn.style.top = `${y}px`;
+                evasionCount++;
+            } else {
+                noBtn.classList.remove('evading');
+                noBtn.style.position = 'static';
+                noBtn.innerText = "Yes (Okay Fine!)";
+                noBtn.className = "btn btn-yes";
+                noBtn.style.transform = "scale(1.2)";
+                noBtn.onclick = handleSuccess;
+            }
+        }
+
+        function handleSuccess() {
+            bgMusic.pause();
+            successMusic.play();
+            
+            gameScreen.style.display = 'none';
+            finalScreen.style.display = 'flex';
+            document.getElementById('success-bear-holder').appendChild(bearBox);
+            
+            setTimeout(() => bearBox.classList.add('hugging'), 100);
+
+            for (let i = 0; i < 150; i++) {
+                setTimeout(createConfetti, i * 15);
+            }
+        }
+
+        function createConfetti() {
+            const colors = ['#ff85a2', '#fbb6ce', '#4ade80', '#fbbf24', '#60a5fa'];
+            const div = document.createElement('div');
+            div.className = 'confetti';
+            div.style.left = Math.random() * 100 + 'vw';
+            div.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            div.style.top = '-20px';
+            const duration = Math.random() * 3 + 2;
+            div.style.animationDuration = duration + 's';
+            effectsLayer.appendChild(div);
+
+            if (Math.random() > 0.6) {
+                const heart = document.createElement('div');
+                heart.className = 'confetti text-3xl';
+                heart.innerHTML = '❤️';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                effectsLayer.appendChild(heart);
+            }
+        }
+    </script>
+</body>
+</html>
