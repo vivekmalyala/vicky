@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Question for You ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fff1f2;
+            overflow: hidden;
+            touch-action: manipulation;
+            transition: background-color 0.5s ease;
+        }
+
+        .bounce-in {
+            animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: floatUp 4s linear infinite;
+            opacity: 0;
+            z-index: 0;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(105vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .pulse-love {
+            animation: pulseLove 1.5s infinite alternate;
+        }
+
+        @keyframes pulseLove {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .evading {
+            position: fixed !important;
+            z-index: 100;
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #yes-btn {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: confettiFall 3s ease-out infinite;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-10vh) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(720deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center relative p-4 select-none">
+
+    <div id="hearts-container" class="absolute inset-0 pointer-events-none hidden overflow-hidden z-0"></div>
+
+    <div id="main-card" class="bg-white rounded-[2.5rem] shadow-2xl p-8 max-w-sm w-full text-center border-4 border-rose-200 relative z-10 bounce-in">
+        
+        <div id="graphic-container" class="mb-6 flex justify-center h-32 items-center">
+            <div id="bear-emoji" class="text-7xl pulse-love">🐻💭</div>
+        </div>
+
+        <h1 id="question-text" class="text-3xl font-black text-rose-500 mb-10 leading-tight">
+            Do you always say no to Vicky?
+        </h1>
+
+        <div id="buttons-container" class="flex flex-col gap-4 relative min-h-[160px] justify-center">
+            <button id="yes-btn" onclick="handleInitialYes()" class="px-10 py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-full shadow-lg transform hover:scale-105 transition-all text-xl z-20">
+                Yes
+            </button>
+            <button id="no-btn" onclick="handleInitialNo()" class="px-10 py-4 bg-gray-100 hover:bg-gray-200 text-gray-500 font-bold rounded-full shadow-sm text-lg z-50 transition-all">
+                No
+            </button>
+        </div>
+
+        <div id="ai-container" class="mt-8 hidden border-t border-rose-100 pt-6">
+            <p id="final-msg" class="text-gray-600 italic text-sm mb-4"></p>
+            <button onclick="location.reload()" class="text-xs text-rose-300 underline">Start Over</button>
+        </div>
+    </div>
+
+    <script>
+        let evasionCount = 0;
+        let noStage = 0;
+        let isSecondQuestion = false;
+
+        const noMessages = [
+            "Are you sure? 🥺",
+            "Think again! 🧐",
+            "Pleeaaase? 😭",
+            "You're being mean! 💔",
+            "Don't want to think either?",
+            "Still saying no? 😤",
+            "I'm gonna cry... 🌧️",
+            "Vicky is sad now. 🥀",
+            "Last, last chance!",
+            "Final No (Catch me if you can!) 🏃‍♂️"
+        ];
+
+        const bearEmojis = ["🐻💧", "🐻🥺", "🐻💔", "🐻😭", "🐻🥀", "🐻💢", "🐻🩹", "🐻🌧️", "🐻💨", "🐻🏃‍♂️"];
+        const bgColors = ["#fff1f2", "#ffe4e6", "#fecdd3", "#fda4af", "#fb7185", "#f43f5e", "#e11d48", "#be123c", "#9f1239", "#881337"];
+
+        const noBtn = document.getElementById('no-btn');
+        const yesBtn = document.getElementById('yes-btn');
+        const questionText = document.getElementById('question-text');
+        const bearEmoji = document.getElementById('bear-emoji');
+        const mainCard = document.getElementById('main-card');
+
+        function handleInitialYes() {
+            // First question: "Do you always say no?" -> Yes
+            // Transition to "So you don't like Vicky?"
+            questionText.innerText = "So you don't like Vicky? 🤨";
+            yesBtn.onclick = () => switchToMainQuestion();
+            noBtn.onclick = () => switchToMainQuestion();
+            noBtn.innerText = "Wait, what?";
+            bearEmoji.innerText = "🐼❓";
+        }
+
+        function handleInitialNo() {
+            switchToMainQuestion();
+        }
+
+        function switchToMainQuestion() {
+            isSecondQuestion = true;
+            questionText.innerText = "Do you like Vicky? ❤️";
+            bearEmoji.innerText = "🐻💖";
+            noBtn.innerText = "No";
+            noBtn.onclick = handleNoLogic;
+            yesBtn.onclick = handleFinalYes;
+            yesBtn.innerText = "Yes";
+            yesBtn.style.transform = "scale(1)";
+        }
+
+        function handleNoLogic() {
+            if (noStage < noMessages.length - 1) {
+                // Shake screen
+                mainCard.classList.add('shake');
+                setTimeout(() => mainCard.classList.remove('shake'), 500);
+
+                // Change Text & Emoji
+                noBtn.innerText = noMessages[noStage];
+                bearEmoji.innerText = bearEmojis[noStage];
+                document.body.style.backgroundColor = bgColors[noStage];
+
+                // Increase Yes Button slightly (but not too much as requested)
+                const newScale = 1 + (noStage * 0.08);
+                yesBtn.style.transform = `scale(${newScale})`;
+
+                noStage++;
+            } else {
+                startEvasion();
+            }
+        }
+
+        function startEvasion() {
+            noBtn.innerText = "Final No (Catch me!) 🏃‍♂️";
+            noBtn.classList.add('evading');
+            
+            // Add listeners for runaway
+            noBtn.addEventListener('mouseover', evade);
+            noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); evade(); }, {passive: false});
+        }
+
+        function evade() {
+            if (evasionCount < 10) {
+                const x = Math.random() * (window.innerWidth - noBtn.offsetWidth - 40) + 20;
+                const y = Math.random() * (window.innerHeight - noBtn.offsetHeight - 40) + 20;
+                
+                noBtn.style.left = x + 'px';
+                noBtn.style.top = y + 'px';
+                
+                evasionCount++;
+                
+                // Scale the yes button a bit more during the chase
+                yesBtn.style.transform = `scale(${1.8 + (evasionCount * 0.05)})`;
+            } else {
+                // After 10 times, transform to Yes
+                stopEvasion();
+            }
+        }
+
+        function stopEvasion() {
+            noBtn.classList.remove('evading');
+            noBtn.style.position = 'static';
+            noBtn.innerText = "Yes (Okay Fine!)";
+            noBtn.className = yesBtn.className;
+            noBtn.style.transform = "scale(1)";
+            noBtn.onclick = handleFinalYes;
+            questionText.innerText = "I knew you couldn't say no forever! 😏";
+            bearEmoji.innerText = "🐻✨";
+        }
+
+        function handleFinalYes() {
+            document.body.style.backgroundColor = "#fff1f2";
+            document.getElementById('buttons-container').innerHTML = '';
+            questionText.innerHTML = "I knew you always liked me! <br><span class='text-2xl text-rose-400'>❤️❤️❤️</span>";
+            bearEmoji.innerHTML = "🐼❤️🐻";
+            bearEmoji.classList.add('pulse-love');
+            
+            document.getElementById('ai-container').classList.remove('hidden');
+            document.getElementById('final-msg').innerText = "I knew you always likes me! ✨";
+            
+            showHearts();
+        }
+
+        function showHearts() {
+            document.getElementById('hearts-container').classList.remove('hidden');
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const h = document.createElement('div');
+                    h.className = 'heart';
+                    h.innerText = ['❤️', '💖', '💕', '🥰'][Math.floor(Math.random() * 4)];
+                    h.style.left = Math.random() * 100 + 'vw';
+                    h.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.getElementById('hearts-container').appendChild(h);
+                    setTimeout(() => h.remove(), 4000);
+                }, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>
