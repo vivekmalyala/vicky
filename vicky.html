@@ -62,7 +62,7 @@
 
         .evading {
             position: fixed !important;
-            z-index: 100;
+            z-index: 1000;
             transition: all 0.1s ease-out;
         }
 
@@ -97,8 +97,8 @@
         
         <div id="graphic-container" class="mb-6 flex justify-center h-32 items-center">
             <div id="bear-wrap" class="bear-box">
-                <div class="bubu">🐼</div>
-                <div class="dudu">🐻</div>
+                <div class="bubu" id="bubu-emoji">🐼</div>
+                <div class="dudu" id="dudu-emoji">🐻</div>
             </div>
         </div>
 
@@ -131,15 +131,16 @@
         const bgMusic = document.getElementById('bg-music');
         const successMusic = document.getElementById('success-music');
         const mainCard = document.getElementById('main-card');
+        const bubuEmoji = document.getElementById('bubu-emoji');
+        const duduEmoji = document.getElementById('dudu-emoji');
 
-        let stage = 0; 
         let noCount = 0;
         let evasionCount = 0;
 
         const noMessages = [
             "Are you sure? 🥺", "Think again! 🧐", "Pleeaaase? 😭", 
-            "Don't be mean! 💔", "Vicky is sad now 🥀", "Still No? 😤",
-            "I'm gonna cry... 🌧️", "Last chance!", "Final No (Catch me!) 🏃‍♂️"
+            "Don't hurt! 💔", "Vicky is sad now 😞", "Still No? 😤",
+            "I'm gonna cry... 🌧️", "Last chance!", "If no, then catch me 🏃‍♂️"
         ];
 
         function startApp() {
@@ -154,34 +155,42 @@
             if ("vibrate" in navigator) navigator.vibrate(200);
         }
 
-        // Setup Initial Click Listeners
         btnLeft.onclick = () => handleFirstQuestionChoice('left');
         btnRight.onclick = () => handleFirstQuestionChoice('right');
 
         function handleFirstQuestionChoice(choice) {
             if (choice === 'left') {
-                // Yes (Always) -> Switch to "So you don't like Vicky?"
-                questionText.innerText = "So you don't like Vicky? 🤨";
-                btnLeft.innerText = "No, I like him!";
-                btnRight.innerText = "Yes, I don't";
+                questionText.innerText = "Really? 😭";
+                bubuEmoji.innerText = "🥺";
+                duduEmoji.innerText = "😢";
                 
-                // Styling updates - ensure Right (No logic) is Red
-                btnLeft.className = "px-6 py-4 bg-green-500 text-white font-bold rounded-full shadow-lg transition-all text-lg z-20";
-                btnRight.className = "px-6 py-4 bg-red-500 text-white font-bold rounded-full shadow-sm text-lg z-50 transition-all";
-                
-                // Reversed logic: Clicking the new "No, I like him" (Left) triggers success
-                btnLeft.onclick = handleFinalYes;
-                // Clicking the new "Yes, I don't" (Right) triggers the No loop
-                btnRight.onclick = handleNoSequence;
+                btnLeft.innerText = "It's okay let's continue 😢";
+                btnLeft.className = "px-6 py-4 bg-rose-400 text-white font-bold rounded-full shadow-lg transition-all text-lg z-20 w-full";
+                btnRight.style.display = "none";
+
+                btnLeft.onclick = () => {
+                    btnRight.style.display = "block";
+                    questionText.innerText = "So you don't like Vicky? 🤨";
+                    bubuEmoji.innerText = "🐼";
+                    duduEmoji.innerText = "🐻";
+                    
+                    btnLeft.innerText = "No, I like him 😍";
+                    btnLeft.className = "px-6 py-4 bg-green-500 text-white font-bold rounded-full shadow-lg transition-all text-lg z-20";
+                    
+                    btnRight.innerText = "Yes, I don't";
+                    btnRight.className = "px-6 py-4 bg-red-500 text-white font-bold rounded-full shadow-sm text-lg z-50 transition-all";
+                    
+                    btnLeft.onclick = handleFinalYes;
+                    btnRight.onclick = handleNoSequence;
+                };
             } else {
-                // No (Always accepts) -> Switch to "Do you like Vicky?"
                 switchToMainQuestion();
             }
         }
 
         function switchToMainQuestion() {
             questionText.innerText = "Do you like Vicky? ❤️";
-            btnLeft.innerText = "Yes";
+            btnLeft.innerText = "Yes, I love him 💕";
             btnRight.innerText = "No";
             
             btnLeft.className = "px-10 py-4 bg-green-500 text-white font-bold rounded-full shadow-lg transition-all text-xl z-20";
@@ -204,23 +213,48 @@
         }
 
         function startEvasion() {
-            btnRight.innerText = "Final No (Catch me!) 🏃‍♂️";
+            btnRight.innerText = "If no then catch me 🏃‍♂️";
             btnRight.classList.add('evading');
+            
+            doEvade();
+            
             btnRight.onmouseover = doEvade;
             btnRight.ontouchstart = (e) => { e.preventDefault(); doEvade(); };
         }
 
         function doEvade() {
-            if (evasionCount < 10) {
-                const x = Math.random() * (window.innerWidth - 140) + 70;
-                const y = Math.random() * (window.innerHeight - 100) + 50;
+            if (evasionCount < 15) {
+                const yesRect = btnLeft.getBoundingClientRect();
+                const btnWidth = 180;
+                const btnHeight = 60;
+                let x, y;
+                
+                let safe = false;
+                let attempts = 0;
+                
+                while(!safe && attempts < 50) {
+                    x = Math.random() * (window.innerWidth - btnWidth - 40) + 20;
+                    y = Math.random() * (window.innerHeight - btnHeight - 40) + 20;
+                    
+                    const padding = 100;
+                    const collision = (
+                        x < yesRect.right + padding &&
+                        x + btnWidth > yesRect.left - padding &&
+                        y < yesRect.bottom + padding &&
+                        y + btnHeight > yesRect.top - padding
+                    );
+                    
+                    if(!collision) safe = true;
+                    attempts++;
+                }
+
                 btnRight.style.left = x + 'px';
                 btnRight.style.top = y + 'px';
                 evasionCount++;
             } else {
                 btnRight.classList.remove('evading');
                 btnRight.style.position = 'static';
-                btnRight.innerText = "Yes (Okay Fine!)";
+                btnRight.innerText = "Yes, I love him 💕";
                 btnRight.className = btnLeft.className;
                 btnRight.onclick = handleFinalYes;
             }
