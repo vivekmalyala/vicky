@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Question for You ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fff1f2;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .bounce-in {
+            animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: floatUp 4s linear infinite;
+            opacity: 0;
+            z-index: 0;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(105vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .pulse-love {
+            animation: pulseLove 1.5s infinite alternate;
+        }
+
+        @keyframes pulseLove {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .evading {
+            position: fixed !important;
+            z-index: 100;
+            transition: all 0.1s ease-out;
+        }
+
+        #yes-btn {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .typing::after {
+            content: '|';
+            animation: blink 0.7s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center relative p-4 select-none">
+
+    <div id="hearts-container" class="absolute inset-0 pointer-events-none hidden overflow-hidden z-0"></div>
+
+    <div id="main-card" class="bg-white rounded-[2.5rem] shadow-2xl p-8 max-w-sm w-full text-center border-4 border-rose-200 relative z-10 bounce-in">
+        
+        <div id="graphic-container" class="mb-6 flex justify-center h-32 items-center">
+            <div class="text-7xl pulse-love">🐻💭</div>
+        </div>
+
+        <h1 id="question-text" class="text-3xl font-black text-rose-500 mb-10 leading-tight">
+            Do you like Vicky?
+        </h1>
+
+        <div id="buttons-container" class="flex flex-col gap-4 relative min-h-[120px] justify-center">
+            <button id="yes-btn" onclick="handleYes()" class="px-10 py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-full shadow-lg transform hover:scale-105 transition-all text-xl z-20">
+                Yes
+            </button>
+            <button id="no-btn" class="px-10 py-4 bg-gray-100 hover:bg-gray-200 text-gray-500 font-bold rounded-full shadow-sm text-lg z-50">
+                No
+            </button>
+        </div>
+
+        <div id="ai-container" class="mt-8 hidden border-t border-rose-100 pt-6">
+            <button id="ai-btn" onclick="generateReason()" class="text-sm px-5 py-2.5 bg-rose-50 text-rose-500 border border-rose-200 rounded-full hover:bg-rose-100 transition-all font-bold shadow-sm">
+                ✨ Why do you like me?
+            </button>
+            <p id="ai-reason" class="mt-5 text-gray-600 italic text-sm leading-relaxed"></p>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; // Set by environment
+        const noMessages = [
+            "No",
+            "Don't want to think either",
+            "Are you really sure? 🥺",
+            "Wait, think again!",
+            "My heart is breaking... 💔",
+            "Last chance to click Yes!",
+            "Final No (Catch me!)"
+        ];
+
+        let noCount = 0;
+        let evasionCount = 0;
+        
+        const noBtn = document.getElementById('no-btn');
+        const yesBtn = document.getElementById('yes-btn');
+        const questionText = document.getElementById('question-text');
+        const graphicContainer = document.getElementById('graphic-container');
+        const aiContainer = document.getElementById('ai-container');
+        const aiReason = document.getElementById('ai-reason');
+        const heartsContainer = document.getElementById('hearts-container');
+
+        const graphics = ["🐻💭", "🐻💧", "🐻🥺", "🐻💔", "🐻😭", "🐻🥀", "🐻🏃‍♂️"];
+
+        noBtn.addEventListener('click', function(e) {
+            if (noCount < noMessages.length - 1) {
+                noCount++;
+                this.innerText = noMessages[noCount];
+                graphicContainer.innerHTML = `<div class="text-7xl">${graphics[Math.min(noCount, graphics.length - 1)]}</div>`;
+                
+                // Yes button grows
+                const scale = 1 + (noCount * 0.3);
+                yesBtn.style.transform = `scale(${scale})`;
+                yesBtn.style.marginBottom = (noCount * 10) + "px";
+            } else {
+                evade(this);
+            }
+        });
+
+        noBtn.addEventListener('mouseover', () => { if (noCount >= noMessages.length - 1 && evasionCount < 5) evade(noBtn); });
+        noBtn.addEventListener('touchstart', (e) => { 
+            if (noCount >= noMessages.length - 1 && evasionCount < 5) {
+                e.preventDefault(); 
+                evade(noBtn); 
+            }
+        }, { passive: false });
+
+        function evade(button) {
+            if (evasionCount === 0) {
+                button.classList.add('evading');
+                graphicContainer.innerHTML = `<div class="text-7xl pulse-love">🏃‍♂️💨</div>`;
+                questionText.innerText = "You can't catch the No!";
+            }
+
+            const x = Math.random() * (window.innerWidth - button.offsetWidth - 40) + 20;
+            const y = Math.random() * (window.innerHeight - button.offsetHeight - 40) + 20;
+            
+            button.style.left = x + 'px';
+            button.style.top = y + 'px';
+            evasionCount++;
+
+            if (evasionCount >= 5) {
+                setTimeout(() => {
+                    button.classList.remove('evading');
+                    button.style.position = 'static';
+                    button.innerText = "Yes (I give up!)";
+                    button.className = yesBtn.className;
+                    button.style.transform = "scale(1)";
+                    button.onclick = handleYes;
+                    questionText.innerText = "Fine, pick a Yes! 😏";
+                    graphicContainer.innerHTML = `<div class="text-7xl pulse-love">🐻✨🐻</div>`;
+                }, 200);
+            }
+        }
+
+        function handleYes() {
+            document.getElementById('buttons-container').style.display = 'none';
+            questionText.innerHTML = "I knew you always liked me! <br><span class='text-2xl text-rose-400'>💖💖💖</span>";
+            graphicContainer.innerHTML = `<div class="text-8xl pulse-love">🐼❤️🐻</div>`;
+            aiContainer.classList.remove('hidden');
+            heartsContainer.classList.remove('hidden');
+            createHearts();
+        }
+
+        async function generateReason() {
+            const aiBtn = document.getElementById('ai-btn');
+            aiBtn.disabled = true;
+            aiBtn.innerText = "Thinking... 💭";
+            aiReason.innerText = "";
+            aiReason.classList.add('typing');
+
+            const prompt = "The user admitted they like Vicky. Give a tiny, romantic, and cute reason (10 words max) why. Start with 'Maybe it's because...'";
+            
+            const fetchReason = async (retryCount = 0) => {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: "You are a cute bear. Be very sweet and brief." }] }
+                        })
+                    });
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    aiReason.innerText = data.candidates[0].content.parts[0].text.trim();
+                    aiReason.classList.remove('typing');
+                    aiBtn.innerText = "✨ Another reason?";
+                    aiBtn.disabled = false;
+                } catch (e) {
+                    if (retryCount < 5) {
+                        setTimeout(() => fetchReason(retryCount + 1), Math.pow(2, retryCount) * 1000);
+                    } else {
+                        aiReason.innerText = "Vicky's heart is just made of gold! ❤️";
+                        aiReason.classList.remove('typing');
+                        aiBtn.disabled = false;
+                    }
+                }
+            };
+            fetchReason();
+        }
+
+        function createHearts() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const h = document.createElement('div');
+                    h.className = 'heart';
+                    h.innerText = ['❤️', '💖', '✨', '🌸', '💕'][Math.floor(Math.random() * 5)];
+                    h.style.left = Math.random() * 100 + 'vw';
+                    h.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    heartsContainer.appendChild(h);
+                    setTimeout(() => h.remove(), 4000);
+                }, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>
